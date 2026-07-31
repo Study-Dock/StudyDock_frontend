@@ -1,37 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { apiRequest } from "../apiClient";
 
 const Dashboard = () => {
-  const [notes, setNotes] = useState([]);
-  const [flashcards, setFlashcards] = useState([]);
+  const [flashcardCount, setFlashcardCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError("");
 
-  const fetchUserData = async () => {
     try {
-      // Fetch user's notes
-      const { data: notesData } = await supabase
-        .from("notes")
-        .select("*")
-        .order("created_at", { ascending: false });
-      // Fetch user's flashcards
-      const { data: flashcardsData } = await supabase
-        .from("flashcards")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      setNotes(notesData || []);
-      setFlashcards(flashcardsData || []);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+      const dashboard = await apiRequest("/dashboard");
+      setFlashcardCount(dashboard.flashcard_count);
+    } catch (requestError) {
+      console.error("Error loading dashboard:", requestError);
+      setError(requestError.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   if (loading) {
     return (
@@ -42,72 +35,56 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Your Notes</h2>
-          <p className="text-3xl font-bold text-blue-600 mb-4">
-            {notes.length}
-          </p>
-          <Link
-            to="/upload"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Upload New Notes →
-          </Link>
-        </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Your Flashcards</h2>
-          <p className="text-3xl font-bold text-blue-600 mb-4">
-            {flashcards.length}
+      {error && (
+        <div
+          className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md"
+          role="alert"
+        >
+          <p>{error}</p>
+          <button
+            onClick={loadDashboard}
+            className="mt-2 font-semibold underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <section className="bg-white p-7 rounded-xl shadow-md">
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            Total Flashcards
+          </p>
+          <p className="mt-3 text-5xl font-bold text-blue-600">
+            {flashcardCount}
+          </p>
+          <p className="mt-2 text-gray-600">
+            Across all of your flashcard sets
           </p>
           <Link
             to="/flashcards"
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-block mt-6 text-blue-600 hover:text-blue-700 font-semibold"
           >
-            View All Flashcards →
+            View Your Sets →
           </Link>
-        </div>
-      </div>
+        </section>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        {notes.length === 0 && flashcards.length === 0 ? (
-          <p className="text-gray-600">
-            No activity yet. Upload your first notes to get started!
+        <section className="bg-blue-600 text-white p-7 rounded-xl shadow-md">
+          <h2 className="text-2xl font-semibold">Create more flashcards</h2>
+          <p className="mt-3 text-blue-100">
+            Upload an image of your notes, review the generated cards, and add
+            them to your library.
           </p>
-        ) : (
-          <div className="space-y-4">
-            {notes.slice(0, 5).map((note) => (
-              <div
-                key={note.id}
-                className="border-b border-gray-200 pb-4 last:border-b-0"
-              >
-                <p className="font-medium">
-                  Uploaded note: {note.original_filename}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {new Date(note.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-            {flashcards.slice(0, 5).map((flashcard) => (
-              <div
-                key={flashcard.id}
-                className="border-b border-gray-200 pb-4 last:border-b-0"
-              >
-                <p className="font-medium">
-                  Generated flashcard from: {flashcard.source_note}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {new Date(flashcard.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+          <Link
+            to="/upload"
+            className="inline-block mt-6 bg-white text-blue-700 px-5 py-3 rounded-lg font-semibold hover:bg-blue-50"
+          >
+            Upload Notes
+          </Link>
+        </section>
       </div>
     </div>
   );
