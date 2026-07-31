@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import UploadNotes from "./pages/UploadNotes";
 import Flashcards from "./pages/Flashcards";
+import CardsetFlashcards from "./pages/CardsetFlashcards";
 import "./App.css";
 
 function App() {
@@ -43,6 +44,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Flashcards />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/cardsets/:cardsetId/flashcards"
+                element={
+                  <ProtectedRoute>
+                    <CardsetFlashcards />
                   </ProtectedRoute>
                 }
               />

@@ -1,9 +1,5 @@
 import React, { useRef, useState } from "react";
-import { supabase } from "../supabaseClient";
-
-const API_URL = (
-  process.env.REACT_APP_API_URL || "http://localhost:8000"
-).replace(/\/$/, "");
+import { apiRequest } from "../apiClient";
 
 const UploadNotes = () => {
   const fileInputRef = useRef(null);
@@ -13,30 +9,6 @@ const UploadNotes = () => {
   const [setName, setSetName] = useState("");
   const [generatedCards, setGeneratedCards] = useState([]);
   const [message, setMessage] = useState(null);
-
-  const getAccessToken = async () => {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) throw error;
-    if (!session?.access_token) {
-      throw new Error("Your session has expired. Please sign in again.");
-    }
-
-    return session.access_token;
-  };
-
-  const parseResponse = async (response) => {
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      throw new Error(data?.detail || "The request could not be completed.");
-    }
-
-    return data;
-  };
 
   const resetUpload = () => {
     setSelectedFile(null);
@@ -78,18 +50,13 @@ const UploadNotes = () => {
     setMessage(null);
 
     try {
-      const accessToken = await getAccessToken();
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(`${API_URL}/upload`, {
+      const cards = await apiRequest("/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
         body: formData,
       });
-      const cards = await parseResponse(response);
 
       if (!Array.isArray(cards) || cards.length === 0) {
         throw new Error("No flashcards could be generated from this image.");
@@ -114,11 +81,9 @@ const UploadNotes = () => {
     setMessage(null);
 
     try {
-      const accessToken = await getAccessToken();
-      const response = await fetch(`${API_URL}/create_set`, {
+      const createdSet = await apiRequest("/create_set", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -126,7 +91,6 @@ const UploadNotes = () => {
           cards: generatedCards,
         }),
       });
-      const createdSet = await parseResponse(response);
 
       resetUpload();
       setMessage({
