@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import UploadNotes from "./pages/UploadNotes";
 import Flashcards from "./pages/Flashcards";
 import CardsetFlashcards from "./pages/CardsetFlashcards";
+import SharedCardset from "./pages/SharedCardset";
 import "./App.css";
 
 function App() {
@@ -54,6 +55,10 @@ function App() {
                     <CardsetFlashcards />
                   </ProtectedRoute>
                 }
+              />
+              <Route
+                path="/shared/cardsets/:cardsetId"
+                element={<SharedCardset />}
               />
             </Routes>
           </main>

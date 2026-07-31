@@ -97,6 +97,15 @@ const Flashcards = () => {
                   <h2 className="text-xl font-semibold text-gray-800 truncate group-hover:text-blue-700">
                     {cardset.title}
                   </h2>
+                  <span
+                    className={`inline-block mt-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                      cardset.visibility
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cardset.visibility ? "Public" : "Private"}
+                  </span>
                   <p className="mt-2 text-sm text-gray-500">
                     Created{" "}
                     {new Date(cardset.creation_date).toLocaleDateString()}

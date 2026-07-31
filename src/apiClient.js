@@ -4,6 +4,21 @@ const API_URL = (
   process.env.REACT_APP_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
 
+const parseResponse = async (response) => {
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "The request could not be completed.");
+  }
+
+  return data;
+};
+
+export const publicApiRequest = async (path, options = {}) => {
+  const response = await fetch(`${API_URL}${path}`, options);
+  return parseResponse(response);
+};
+
 export const apiRequest = async (path, options = {}) => {
   const {
     data: { session },
@@ -22,11 +37,5 @@ export const apiRequest = async (path, options = {}) => {
     ...options,
     headers,
   });
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(data?.detail || "The request could not be completed.");
-  }
-
-  return data;
+  return parseResponse(response);
 };
